@@ -7,12 +7,12 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${PRODUCTO_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${PRODUCTO_MYSQL_DATABASE}
     ports:
       - "3310:3306" # Tu máquina (cliente externo) → MySQL prod
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p${MYSQL_ROOT_PASSWORD} || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p${PRODUCTO_MYSQL_ROOT_PASSWORD} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,11 +30,11 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${PRODUCTO_DB_HOST}
+      DB_PORT: ${PRODUCTO_DB_PORT}
+      DB_NAME: ${PRODUCTO_DB_NAME}
+      DB_USERNAME: ${PRODUCTO_DB_USERNAME}
+      DB_PASSWORD: ${PRODUCTO_DB_PASSWORD}
     ports:
       - "8084:8084"
     networks:
