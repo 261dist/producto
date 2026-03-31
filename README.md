@@ -32,15 +32,6 @@ El proyecto sigue una arquitectura en capas simple:
 - `exception`: manejo global de errores
 - `config`: configuración técnica, incluyendo OpenAPI
 
-## Plantilla y guías
-
-- Repositorio plantilla: https://github.com/261dist/catalogo/
-- Documentación operativa transversal: [carrera-sistemas-docs-operativos](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos)
-- [Índice único para alumnos](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos/blob/main/00-arquitectura-documentos/indice-alumnos.md)
-- [Estándar de codificación — general](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos/blob/main/04-estandares-operativos/software/estandar-codificacion.md)
-- [Estándar de codificación — microservicios](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos/blob/main/04-estandares-operativos/software/estandar-codificacion-microservicios.md)
-- [Política de ramas y PR](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos/blob/main/04-estandares-operativos/software/politica-ramas-pr.md)
-- [Prompt de alumnos](https://github.com/upeucorporativo/carrera-sistemas-docs-operativos/blob/main/05-plantillas-operativas/software/prompt-alumnos.md)
 
 Ubicación recomendada para clases/equipos:
 
@@ -113,6 +104,10 @@ mvnw.cmd spring-boot:run
 
 ```powershell
 .\mvnw.cmd spring-boot:run
+```
+
+```powershell
+mvn spring-boot:run
 ```
 
 - Linux / WSL:

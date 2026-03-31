@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${PRODUCTO_DB_HOST}:${PRODUCTO_DB_PORT}/${PRODUCTO_DB_NAME}?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+    username: ${PRODUCTO_DB_USERNAME}
+    password: ${PRODUCTO_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   flyway:
     enabled: true
