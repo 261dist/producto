@@ -45,3 +45,4 @@ volumes:
 
 networks:
   producto-net:
+    name: producto-net # unicamente se agregó esta línea para nombrar la red, lo que facilita su identificación y gestión.
