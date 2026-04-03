@@ -1,37 +1,33 @@
-# producto
+# 📦 Microservicio Producto
 
-Microservicio Spring Boot para la gestión de productos. Actualmente expone un CRUD REST para la entidad `Producto` y cuenta con documentación OpenAPI/Swagger.
+Este proyecto implementa el **Microservicio Producto**, responsable de gestionar productos dentro de una arquitectura de microservicios en evolución.
 
-Este repositorio **no es la plantilla base**: es una aplicación concreta (`producto`) creada a partir de la plantilla `catalogo` y adaptada al dominio de productos.
+---
 
-## Stack
+## 🧱 Estado del proyecto
 
-- Java 17
-- Spring Boot 3.5.12
-- Spring Web
-- Spring Data JPA
-- Spring Validation
-- Spring Boot Actuator
-- Springdoc OpenAPI
-- Flyway (core + mysql)
-- MySQL
-- Lombok
-- Maven Wrapper (opcional)
+Actualmente incluye:
 
-## Estructura del proyecto
+- API REST funcional para productos
+- Persistencia con MySQL
+- Configuración por perfiles (`dev`, `prod`)
+- Migraciones versionadas con Flyway en `prod`
+- Contenerización con Docker
+- Documentación OpenAPI/Swagger en `dev`
+- Preparado para integración futura con:
+  - Config Server
+  - Eureka
+  - API Gateway
 
-El proyecto sigue una arquitectura en capas simple:
+---
 
-- `controller`: expone los endpoints REST
-- `service`: define contratos de negocio
-- `service.impl`: implementa la lógica de negocio
-- `repository`: acceso a datos con Spring Data JPA
-- `entity`: entidades persistentes
-- `dto`: objetos request/response
-- `mapper`: conversión manual entre entidad y DTO
-- `exception`: manejo global de errores
-- `config`: configuración técnica, incluyendo OpenAPI
+## 🏗️ Arquitectura (visión)
 
+```text
+Client → Gateway → Microservicios → Eureka → Config Server
+```
+
+Este repositorio implementa únicamente el microservicio **Producto**.
 
 Ubicación recomendada para clases/equipos:
 
@@ -52,226 +48,487 @@ ProyectosMS2026/
     [otro-ms]/
 ```
 
-## Requisitos
+---
 
-- JDK 17
-- Maven no es obligatorio, porque el proyecto incluye `mvnw` y `mvnw.cmd`
-- MySQL 8.4 (vía Docker Compose o instalación local)
+## ⚙️ Stack tecnológico base 2026
 
-Ver sección "Guía rápida" → "Paso obligatorio: Levanta la BD primero" para instrucciones de setup.
+- Java 17
+- Spring Boot 3.5.12
+- Maven 3.9+
+- MySQL 8.4
+- Docker
+- Docker Compose
+- Flyway
+- SpringDoc OpenAPI
 
-## Guía rápida para alumnos (autoestudio)
-
-**Importante**: Todos los comandos siguientes se ejecutan desde dentro de la carpeta `producto` (donde está el `pom.xml`).
-
-### Paso obligatorio: Levanta la BD primero
-
-La aplicación necesita MySQL disponible. Antes de hacer cualquier cosa, levanta la base de datos usando una de estas opciones:
-
-**Opción A: Con Docker (recomendado)**
+Antes de ejecutar el proyecto, asegúrate de tener instalado:
 
 ```bash
-docker compose -f docker-compose-dev.yml up -d
+java -version
+mvn -v
+docker -v
+docker compose version
 ```
 
-Espera ~3 segundos a que MySQL esté listo (verifica con `docker ps`).
+## Dependencias
 
-**Opción B: Con Laragon, XAMPP, o MySQL local**
+- Spring Web
+- Spring Data JPA
+- Spring Validation
+- Lombok
+- MySQL Driver
+- Flyway Core + Flyway MySQL
+- Spring Boot Actuator
+- Spring Boot DevTools
+- SpringDoc OpenAPI WebMVC UI
+- H2 Database para pruebas
 
-- Asegúrate de que MySQL esté corriendo en tu máquina local.
-- Verifica la configuración en `src/main/resources/application-dev.yml` (host, puerto, usuario, contraseña).
-- Confirma que la BD `db_producto` existe.
+---
 
-### Sigue este flujo en orden para trabajar sin depender del docente:
+## 📌 Dominio gestionado
 
-1. Ejecutar la aplicación en `dev` (elige una opción):
+La entidad principal es `Producto` y actualmente contiene:
 
-**Opción 1 (recomendada - VS Code):**
-- Abre archivo `src/main/java/com/upeu/producto/ProductoApplication.java`
-- Haz clic en el botón `Run` (▶) que aparece sobre la clase
-- El servicio inicia con perfil `dev` automáticamente
-- No necesitas escribir `mvn` ni `./mvnw` manualmente
+- `id`
+- `nombre`
+- `descripcion`
+- `idCategoria`
 
-**Opción 2 (terminal con Maven Wrapper):**
+Tabla actual:
 
-- Windows (CMD):
-
-```bat
-mvnw.cmd spring-boot:run
+```sql
+productos
 ```
 
-- Windows (PowerShell):
+Migración base:
 
-```powershell
-.\mvnw.cmd spring-boot:run
+```text
+src/main/resources/db/migration/V1__create_productos_table.sql
 ```
 
-```powershell
-mvn spring-boot:run
+---
+
+## 🔌 Puertos utilizados
+
+| Servicio | Puerto expuesto |
+|----------|------------------|
+| Aplicación (dev) | 8083 |
+| Aplicación (prod) | 8084 |
+| MySQL (dev) | 3309 |
+| MySQL (prod) | 3310 |
+
+---
+
+## 🔄 Diferencia entre DEV y PROD
+
+| Modo | Ejecución | Base de datos | Puerto app | Swagger | Flyway |
+|------|-----------|---------------|------------|---------|--------|
+| DEV | Maven | MySQL local o Docker | 8083 | habilitado | deshabilitado |
+| PROD | Docker Compose | Docker | 8084 | deshabilitado | habilitado |
+
+---
+
+## 🧪 Endpoints principales
+
+Base path:
+
+```text
+/api/v1/productos
 ```
 
-- Linux / WSL:
+Operaciones disponibles:
 
-```bash
-./mvnw spring-boot:run
+- `POST /api/v1/productos`
+- `GET /api/v1/productos`
+- `GET /api/v1/productos/{id}`
+- `PUT /api/v1/productos/{id}`
+- `DELETE /api/v1/productos/{id}`
+
+Ejemplo de payload de creación:
+
+```json
+{
+  "nombre": "Laptop Lenovo",
+  "descripcion": "Equipo para laboratorio",
+  "idCategoria": 1
+}
 ```
 
-2. Verificar que está corriendo:
-
-- Swagger: `http://localhost:8083/swagger-ui.html`
-- Health: `http://localhost:8083/actuator/health`
-
-3. Probar CRUD de `Producto` en Swagger o Postman.
-
-4. Ejecutar pruebas (opcional): ver sección `Pruebas`.
-
-Checklist mínimo antes de entregar tareas:
-
-- BD levantada y corriendo (`docker ps` muestra el contenedor)
-- Las pruebas pasan (`BUILD SUCCESS`)
-- La app inicia sin errores
-- Los endpoints CRUD responden correctamente
-- Si hubo cambios de BD, existe script SQL versionado
-
-## Cómo usar este proyecto como referencia
-
-Este repositorio (`producto`) **no es la plantilla base**; es una implementación concreta creada a partir de `catalogo`.
-
-Para crear un nuevo microservicio (por ejemplo, `ventas`) a partir de `catalogo`:
-
-1. Crear un nuevo repositorio para el microservicio y usar `catalogo` como plantilla base.
-2. Cambiar `spring.application.name` en `src/main/resources/application.yml`.
-3. Ajustar puertos para evitar conflicto con otros microservicios (app y MySQL).
-4. Crear nuevas entidades/DTOs/servicios/controladores manteniendo la misma arquitectura por capas.
-5. Crear script SQL inicial de la nueva tabla en `src/main/resources/db/migration`.
-6. Validar con pruebas y ejecución local.
-
-Recomendación para clases:
-
-- Mantener `catalogo` como “base estable”.
-- Mantener este repo (`producto`) como implementación concreta separada.
-- Cada alumno o equipo trabaja en una copia (`ventas`, `clientes`, etc.) sin romper la plantilla original.
-
-## Configuración actual
-
-Perfil activo por defecto:
-
-- `dev`
-- Se activa automáticamente al ejecutar con `Run` en VS Code o con `mvn spring-boot:run` en local
-
-Puertos por entorno:
-
-- `dev` (Java local): `8083`
-- `prod` (Docker): `8084`
-
-Configuración datasource en desarrollo:
-
-- Host: `localhost`
-- Puerto: `3309`
-- Base de datos: `db_producto`
-- Usuario: `root`
-
-Configuración por entorno:
-
-- Base: `src/main/resources/application.yml`
-- Dev: `src/main/resources/application-dev.yml`
-- Prod: `src/main/resources/application-prod.yml`
-
-Política actual de base de datos:
-
-- `dev`: JPA con `ddl-auto: update` y Flyway deshabilitado
-- `prod`: Flyway habilitado y JPA con `ddl-auto: validate`
-- El equipo trabaja con enfoque `DB-first`: los cambios de esquema deben quedar versionados en SQL
-
-Para `docker-compose` de prod se usan variables desde `.env` (plantilla en `.env.example`).
-
-Paso obligatorio antes de correr `prod`:
-
-- Crear el archivo `.env` a partir de `.env.example` (el `.env` no se sube a GitHub).
-- Windows (PowerShell): `Copy-Item .env.example .env`
-- Linux/WSL: `cp .env.example .env`
-- Luego ajustar valores de `.env` según tu entorno.
-- Validación rápida: antes de `docker compose up -d`, confirma que existe `.env` en la raíz del proyecto.
-
-## Ejecución en paralelo (recomendado)
-
-Este repositorio está preparado para correr `dev` y `prod` al mismo tiempo sin conflicto:
-
-- `dev` app local: `8083`
-- `prod` app docker: `8084`
-- `dev` mysql docker: `3309`
-- `prod` mysql docker: `3310`
-
-Comandos:
-
-```bash
-# DB de desarrollo
-docker compose -f docker-compose-dev.yml up -d
-
-# Stack productivo local (app + db)
-docker compose up -d
-```
-
-Para futuros microservicios (`ventas`, `clientes`, etc.), usa el mismo patrón con puertos distintos y nombres de proyecto distintos.
-
-## URLs y Documentación
-
-**Modo `dev` (local)**:
-- Swagger: `http://localhost:8083/swagger-ui.html`
-- Health: `http://localhost:8083/actuator/health`
-- API Productos: `http://localhost:8083/api/v1/productos`
-
-**Modo `prod` (Docker)**:
-- API Productos: `http://localhost:8084/api/v1/productos`
-- Health: `http://localhost:8084/actuator/health`
-- Swagger: deshabilitado
-
-## Pruebas
-
-Ejecutar pruebas:
-
-```bat
-mvnw.cmd test
-```
-
-En PowerShell (Windows), usar:
-
-```powershell
-.\mvnw.cmd test
-```
-
-En Linux / WSL:
-
-```bash
-./mvnw test
-```
-
-Estado validado actual:
-
-- `BUILD SUCCESS`
-- `Tests run: 8, Failures: 0, Errors: 0, Skipped: 0`
-
-Nota:
-
-- Actualmente las pruebas se ejecutan de forma manual con Maven (`mvnw.cmd test` o `./mvnw test`).
-- En este repositorio no hay pipeline CI/CD activo en GitHub Actions.
+---
 
 ## Base de datos y migraciones
 
 Convención actual:
 
-- Los cambios de esquema deben quedar en SQL versionado
-- Flyway ejecuta automáticamente scripts en `src/main/resources/db/migration` cuando arranca `prod`
-- Ejemplo actual: `V1__create_productos_table.sql`
-- En `prod`, Hibernate no crea tablas; solo valida el esquema existente
+- Los cambios de esquema deben quedar en SQL versionado.
+- Flyway ejecuta automáticamente scripts en `src/main/resources/db/migration` cuando arranca `prod`.
+- Ejemplo actual: `V1__create_productos_table.sql`.
+- En `prod`, Hibernate no crea tablas; solo valida el esquema existente.
+- En `dev`, Hibernate usa `ddl-auto: update` y Flyway está deshabilitado.
 
 Flujo recomendado del equipo:
 
-1. Diseñar o ajustar la tabla en SQL
-2. Probar el cambio en `dev`
-3. Crear una nueva versión SQL si corresponde (`V2`, `V3`, etc.)
-4. Aplicar el cambio en `prod`
-5. Arrancar la app en `prod` y validar
+1. Diseñar o ajustar la tabla en SQL.
+2. Probar el cambio en `dev`.
+3. Crear una nueva versión SQL si corresponde (`V2`, `V3`, etc.).
+4. Aplicar el cambio en `prod`.
+5. Arrancar la app en `prod` y validar.
 
 No modificar scripts ya ejecutados; crear siempre una nueva versión.
 
+---
+
+# 🚀 Ejecución en modo desarrollo (dev)
+
+## 🔹 1. Clonar repositorio
+
+Ejemplo:
+
+```bash
+git clone https://github.com/261dist/producto.git
+
+cd producto
+```
+
+---
+
+## 🔹 2. Levantar base de datos dev
+
+```bash
+docker compose -f docker-compose-dev.yml up -d
+```
+
+Esto levanta MySQL dev en el puerto `3309` con la base `db_producto`.
+
+Si no usas Docker, también puedes apuntar a un MySQL local siempre que coincida con la configuración de `src/main/resources/application-dev.yml`.
+
+---
+
+## 🔹 3. Ejecutar aplicación
+
+```bash
+mvn spring-boot:run
+```
+
+Perfil activo por defecto:
+
+```text
+dev
+```
+
+---
+
+## 🌐 Acceso DEV
+
+API Productos:
+
+```text
+http://localhost:8083/api/v1/productos
+```
+
+Swagger:
+
+```text
+http://localhost:8083/swagger-ui.html
+```
+
+Health:
+
+```text
+http://localhost:8083/actuator/health
+```
+
+---
+
+# 🐳 Ejecución en modo producción (prod)
+
+## 🔹 1. Crear archivo `.env`
+
+```env
+PRODUCTO_MYSQL_ROOT_PASSWORD=root
+PRODUCTO_MYSQL_DATABASE=db_producto
+
+SPRING_PROFILES_ACTIVE=prod
+
+PRODUCTO_DB_HOST=mysql-producto
+PRODUCTO_DB_PORT=3306
+PRODUCTO_DB_NAME=db_producto
+PRODUCTO_DB_USERNAME=root
+PRODUCTO_DB_PASSWORD=root
+```
+
+---
+
+## 🔹 2. Levantar servicios
+
+```bash
+docker compose -f docker-compose.yml up -d
+```
+
+Esto levanta:
+
+- MySQL prod en el puerto `3310`
+- La aplicación `producto` en el puerto `8084`
+
+---
+
+## 🌐 Acceso PROD
+
+API Productos:
+
+```text
+http://localhost:8084/api/v1/productos
+```
+
+Health:
+
+```text
+http://localhost:8084/actuator/health
+```
+
+Swagger:
+
+```text
+deshabilitado en prod
+```
+
+---
+
+# 📈 Escalado de la aplicación (múltiples instancias)
+
+## 🔹 Paso 1. Detener entorno previo
+
+Antes de iniciar el escalado, detener los servicios que estuvieran levantados previamente:
+
+```bash
+docker compose -f docker-compose.yml down
+```
+
+Si existieran contenedores manuales anteriores, también eliminarlos:
+
+```bash
+docker rm -f producto1 producto2 producto3
+```
+
+---
+
+## 🔹 Paso 2. Levantar solo MySQL
+
+Levantar únicamente la base de datos del entorno de producción:
+
+```bash
+docker compose -f docker-compose.yml up -d mysql-producto
+```
+
+---
+
+## 🔹 Paso 3. Construir imagen
+
+Generar la imagen Docker de la aplicación:
+
+```bash
+docker build -t producto-service .
+```
+
+---
+
+## 🔹 Paso 4. Ejecutar instancias
+
+Nota: en este escenario se usa la red `producto-net` definida en Docker Compose.
+
+### Instancia 1
+
+```bash
+docker run --name producto1 --network producto-net --env-file .env -p 8084:8084 producto-service
+```
+
+### Instancia 2
+
+```bash
+docker run --name producto2 --network producto-net --env-file .env -p 8085:8084 producto-service
+```
+
+---
+
+## 🔹 Paso 5. Verificar
+
+```bash
+docker ps
+```
+
+---
+
+## 🔹 Paso 6. Probar
+
+- http://localhost:8084/api/v1/productos
+- http://localhost:8085/api/v1/productos
+
+---
+
+## 🔹 Paso 7. Finalizar
+
+```bash
+docker stop producto1
+docker rm producto1
+docker rmi producto-service
+```
+
+O limpiar el entorno completo:
+
+```bash
+docker rm -f producto1 producto2 producto3
+docker compose -f docker-compose.yml down
+```
+
+---
+
+## 🔹 Ejecución sin `.env` (opcional)
+
+### Bash
+
+```bash
+docker run -d --name producto1 \
+  --network producto-net \
+  -p 8084:8084 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e PRODUCTO_DB_HOST=mysql-producto \
+  -e PRODUCTO_DB_PORT=3306 \
+  -e PRODUCTO_DB_NAME=db_producto \
+  -e PRODUCTO_DB_USERNAME=root \
+  -e PRODUCTO_DB_PASSWORD=root \
+  producto-service
+```
+
+### PowerShell
+
+```powershell
+docker run --name producto3 --network producto-net -p 8086:8084 `
+  -e SPRING_PROFILES_ACTIVE=prod `
+  -e PRODUCTO_DB_HOST=mysql-producto `
+  -e PRODUCTO_DB_PORT=3306 `
+  -e PRODUCTO_DB_NAME=db_producto `
+  -e PRODUCTO_DB_USERNAME=root `
+  -e PRODUCTO_DB_PASSWORD=root `
+  producto-service
+```
+
+---
+
+# 🔗 Integración futura
+
+## Config Server
+
+```properties
+SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:7071
+```
+
+## Eureka
+
+```properties
+EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-server:8761/eureka
+```
+
+## Gateway
+
+```yaml
+uri: lb://producto
+```
+
+---
+
+# ⚠️ Alcance actual
+
+Este proyecto no incluye aún:
+
+- API Gateway
+- Eureka
+- Config Server
+- Balanceador
+
+---
+
+# 🧠 Concepto clave
+
+Este proyecto es un microservicio que:
+
+- es independiente
+- puede escalar
+- expone su propia API REST
+- se integrará progresivamente al ecosistema completo
+
+---
+
+# 📌 Nota final
+
+Este repositorio forma parte de una arquitectura de microservicios en evolución.
+
+# 🔧 Anexo PR (flujo de trabajo con Git)
+
+Este flujo permite trabajar con ramas, enviar cambios y versionar el proyecto de forma ordenada.
+
+---
+
+## 🔹 1. Actualizar repositorio
+
+```bash
+git branch
+git pull origin main
+```
+
+---
+
+## 🔹 2. Crear rama de trabajo
+
+```bash
+git checkout -b tarea/avance
+```
+
+Atención: no trabajes directamente sobre `main`.
+
+---
+
+## 🔹 3. Realizar cambios
+
+```bash
+git add .
+git commit -m "feat: avance"
+git push -u origin tarea/avance
+```
+
+---
+
+## 🔹 4. Volver a `main` y limpiar rama
+
+```bash
+git checkout main
+git pull origin main
+
+git branch -d tarea/avance
+git push origin --delete tarea/avance
+```
+
+---
+
+## 🔹 5. Crear tag (versión estable)
+
+```bash
+git tag -a vs01 -m "versión estable"
+git push origin vs01
+```
+
+---
+
+## 🔹 6. Eliminar tag (si es necesario)
+
+```bash
+git tag -d vs01
+git push origin --delete vs01
+```
+
+---
+
+## 📚 Documentación adicional
+
+Ver documentación operativa en:
+
+https://upeuoficial.github.io/carrera-sistemas-docs-operativos/
