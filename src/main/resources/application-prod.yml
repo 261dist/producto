@@ -1,3 +1,6 @@
+server:
+  port: 9096
+
 spring:
   datasource:
     url: jdbc:mysql://${PRODUCTO_DB_HOST}:${PRODUCTO_DB_PORT}/${PRODUCTO_DB_NAME}?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
@@ -15,9 +18,6 @@ spring:
     properties:
       hibernate:
         format_sql: false
-
-server:
-  port: 8084
 
 springdoc:
   swagger-ui:

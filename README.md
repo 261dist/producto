@@ -74,14 +74,13 @@ docker compose version
 
 - Spring Web
 - Spring Data JPA
-- Spring Validation
+- Validation
 - Lombok
 - MySQL Driver
-- Flyway Core + Flyway MySQL
+- Flyway
 - Spring Boot Actuator
 - Spring Boot DevTools
 - SpringDoc OpenAPI WebMVC UI
-- H2 Database para pruebas
 
 ---
 
@@ -112,10 +111,10 @@ src/main/resources/db/migration/V1__create_productos_table.sql
 
 | Servicio | Puerto expuesto |
 |----------|------------------|
-| Aplicación (dev) | 8083 |
-| Aplicación (prod) | 8084 |
-| MySQL (dev) | 3309 |
-| MySQL (prod) | 3310 |
+| Aplicación (dev) | 9091 |
+| Aplicación (prod) | 9096 |
+| MySQL (dev) | 3391 |
+| MySQL (prod) | 3396 |
 
 ---
 
@@ -123,8 +122,8 @@ src/main/resources/db/migration/V1__create_productos_table.sql
 
 | Modo | Ejecución | Base de datos | Puerto app | Swagger | Flyway |
 |------|-----------|---------------|------------|---------|--------|
-| DEV | Maven | MySQL local o Docker | 8083 | habilitado | deshabilitado |
-| PROD | Docker Compose | Docker | 8084 | deshabilitado | habilitado |
+| DEV | Maven | MySQL local o Docker | 9091 | habilitado | deshabilitado |
+| PROD | Docker Compose | Docker | 9096 | deshabilitado | habilitado |
 
 ---
 
@@ -198,7 +197,7 @@ cd producto
 docker compose -f docker-compose-dev.yml up -d
 ```
 
-Esto levanta MySQL dev en el puerto `3309` con la base `db_producto`.
+Esto levanta MySQL dev en el puerto `3391` con la base `db_producto`.
 
 Si no usas Docker, también puedes apuntar a un MySQL local siempre que coincida con la configuración de `src/main/resources/application-dev.yml`.
 
@@ -223,19 +222,19 @@ dev
 API Productos:
 
 ```text
-http://localhost:8083/api/v1/productos
+http://localhost:9091/api/v1/productos
 ```
 
 Swagger:
 
 ```text
-http://localhost:8083/swagger-ui.html
+http://localhost:9091/swagger-ui/index.html
 ```
 
 Health:
 
 ```text
-http://localhost:8083/actuator/health
+http://localhost:9091/actuator/health
 ```
 
 ---
@@ -267,8 +266,8 @@ docker compose -f docker-compose.yml up -d
 
 Esto levanta:
 
-- MySQL prod en el puerto `3310`
-- La aplicación `producto` en el puerto `8084`
+- MySQL prod en el puerto `3396`
+- La aplicación `producto` en el puerto `9096`
 
 ---
 
@@ -277,13 +276,13 @@ Esto levanta:
 API Productos:
 
 ```text
-http://localhost:8084/api/v1/productos
+http://localhost:9096/api/v1/productos
 ```
 
 Health:
 
 ```text
-http://localhost:8084/actuator/health
+http://localhost:9096/actuator/health
 ```
 
 Swagger:
@@ -296,61 +295,15 @@ deshabilitado en prod
 
 # 📈 Escalado de la aplicación (múltiples instancias)
 
-## 🔹 Paso 1. Detener entorno previo
+## 🔹 Opción rápida. No detener el entorno previo
 
-Antes de iniciar el escalado, detener los servicios que estuvieran levantados previamente:
-
-```bash
-docker compose -f docker-compose.yml down
-```
-
-Si existieran contenedores manuales anteriores, también eliminarlos:
+Busca el contenedor de la aplicación con `docker ps -a`:
 
 ```bash
-docker rm -f producto1 producto2 producto3
+docker run --name producto22 --network producto-net --env-file .env -p 9099:9096 producto-prod-producto
 ```
 
----
-
-## 🔹 Paso 2. Levantar solo MySQL
-
-Levantar únicamente la base de datos del entorno de producción:
-
-```bash
-docker compose -f docker-compose.yml up -d mysql-producto
-```
-
----
-
-## 🔹 Paso 3. Construir imagen
-
-Generar la imagen Docker de la aplicación:
-
-```bash
-docker build -t producto-service .
-```
-
----
-
-## 🔹 Paso 4. Ejecutar instancias
-
-Nota: en este escenario se usa la red `producto-net` definida en Docker Compose.
-
-### Instancia 1
-
-```bash
-docker run --name producto1 --network producto-net --env-file .env -p 8084:8084 producto-service
-```
-
-### Instancia 2
-
-```bash
-docker run --name producto2 --network producto-net --env-file .env -p 8085:8084 producto-service
-```
-
----
-
-## 🔹 Paso 5. Verificar
+## 🔹 Verificar
 
 ```bash
 docker ps
@@ -358,19 +311,19 @@ docker ps
 
 ---
 
-## 🔹 Paso 6. Probar
+## 🔹 Probar
 
-- http://localhost:8084/api/v1/productos
-- http://localhost:8085/api/v1/productos
+- http://localhost:9096/api/v1/productos
+- http://localhost:9099/api/v1/productos
 
 ---
 
-## 🔹 Paso 7. Finalizar
+## 🔹 Finalizar
 
 ```bash
-docker stop producto1
-docker rm producto1
-docker rmi producto-service
+docker stop producto22
+docker rm producto22
+docker rmi producto-prod-producto
 ```
 
 O limpiar el entorno completo:
@@ -384,25 +337,10 @@ docker compose -f docker-compose.yml down
 
 ## 🔹 Ejecución sin `.env` (opcional)
 
-### Bash
-
-```bash
-docker run -d --name producto1 \
-  --network producto-net \
-  -p 8084:8084 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e PRODUCTO_DB_HOST=mysql-producto \
-  -e PRODUCTO_DB_PORT=3306 \
-  -e PRODUCTO_DB_NAME=db_producto \
-  -e PRODUCTO_DB_USERNAME=root \
-  -e PRODUCTO_DB_PASSWORD=root \
-  producto-service
-```
-
 ### PowerShell
 
 ```powershell
-docker run --name producto3 --network producto-net -p 8086:8084 `
+docker run --name producto33 --network producto-net -p 9098:9096 `
   -e SPRING_PROFILES_ACTIVE=prod `
   -e PRODUCTO_DB_HOST=mysql-producto `
   -e PRODUCTO_DB_PORT=3306 `
@@ -416,13 +354,13 @@ docker run --name producto3 --network producto-net -p 8086:8084 `
 
 # 🔗 Integración futura
 
-## Config Server
+## Config Server dev
 
 ```properties
 SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:7071
 ```
 
-## Eureka
+## Eureka dev
 
 ```properties
 EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-server:8761/eureka
@@ -512,8 +450,8 @@ git push origin --delete tarea/avance
 ## 🔹 5. Crear tag (versión estable)
 
 ```bash
-git tag -a vs01 -m "versión estable"
-git push origin vs01
+git tag -a vs01-producto-base -m "versión base"
+git push origin vs01-producto-base
 ```
 
 ---
@@ -521,8 +459,8 @@ git push origin vs01
 ## 🔹 6. Eliminar tag (si es necesario)
 
 ```bash
-git tag -d vs01
-git push origin --delete vs01
+git tag -d vs01-producto-base
+git push origin --delete vs01-producto-base
 ```
 
 ---
