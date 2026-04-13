@@ -25,7 +25,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public ProductoResponse create(ProductoRequest request) {
-        log.info("Iniciando creación de producto con nombre: {} y idCategoria: {}", request.getNombre(), request.getIdCategoria());
+        log.info("Iniciando creacion de producto con nombre: {} y idCategoria: {}", request.getNombre(), request.getIdCategoria());
         Producto producto = productoMapper.toEntity(request);
         Producto savedProducto = productoRepository.save(producto);
         log.info("Producto creado exitosamente con ID: {}", savedProducto.getId());
@@ -56,7 +56,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public ProductoResponse update(Integer id, ProductoRequest request) {
-        log.info("Iniciando actualización de producto ID: {}", id);
+        log.info("Iniciando actualizacion de producto ID: {}", id);
         Producto producto = getProductoById(id);
         productoMapper.updateEntityFromRequest(producto, request);
         Producto updatedProducto = productoRepository.save(producto);
@@ -67,7 +67,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public void delete(Integer id) {
-        log.info("Iniciando eliminación de producto ID: {}", id);
+        log.info("Iniciando eliminacion de producto ID: {}", id);
         getProductoById(id);
         productoRepository.deleteById(id);
         log.info("Producto ID: {} eliminado exitosamente", id);

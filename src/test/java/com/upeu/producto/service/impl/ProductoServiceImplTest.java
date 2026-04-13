@@ -35,15 +35,15 @@ class ProductoServiceImplTest {
     @Test
     void shouldCreateProducto() {
         ProductoRequest request = ProductoRequest.builder()
-            .nombre("Laptop")
-            .descripcion("Portatil de oficina")
-            .idCategoria(3)
+                .nombre("Laptop")
+                .descripcion("Portatil de oficina")
+                .idCategoria(3)
                 .build();
         Producto savedEntity = Producto.builder()
-            .id(1)
-            .nombre("Laptop")
-            .descripcion("Portatil de oficina")
-            .idCategoria(3)
+                .id(1)
+                .nombre("Laptop")
+                .descripcion("Portatil de oficina")
+                .idCategoria(3)
                 .build();
 
         when(productoRepository.save(any(Producto.class))).thenReturn(savedEntity);

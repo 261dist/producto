@@ -14,10 +14,10 @@ Actualmente incluye:
 - Migraciones versionadas con Flyway en `prod`
 - Contenerización con Docker
 - Documentación OpenAPI/Swagger en `dev`
-- Preparado para integración futura con:
-  - Config Server
-  - Eureka
-  - API Gateway
+- Integración operativa con Config Server
+- Integración operativa con Registry Server (Eureka)
+- Integración operativa con API Gateway
+- Enrutamiento dinámico con `lb://producto`
 
 ---
 
@@ -112,9 +112,9 @@ src/main/resources/db/migration/V1__create_productos_table.sql
 | Servicio | Puerto expuesto |
 |----------|------------------|
 | Aplicación (dev) | 9091 |
-| Aplicación (prod) | 9096 |
+| Aplicación (prod) | 9092 |
 | MySQL (dev) | 3391 |
-| MySQL (prod) | 3396 |
+| MySQL (prod) | 3392 |
 
 ---
 
@@ -123,7 +123,7 @@ src/main/resources/db/migration/V1__create_productos_table.sql
 | Modo | Ejecución | Base de datos | Puerto app | Swagger | Flyway |
 |------|-----------|---------------|------------|---------|--------|
 | DEV | Maven | MySQL local o Docker | 9091 | habilitado | deshabilitado |
-| PROD | Docker Compose | Docker | 9096 | deshabilitado | habilitado |
+| PROD | Docker Compose | Docker | 9092 | deshabilitado | habilitado |
 
 ---
 
@@ -150,6 +150,24 @@ Ejemplo de payload de creación:
   "nombre": "Laptop Lenovo",
   "descripcion": "Equipo para laboratorio",
   "idCategoria": 1
+}
+```
+
+Endpoint auxiliar para pruebas de gateway y balanceo:
+
+- `GET /api/v1/producto/instancia`
+
+```text
+/api/v1/producto/instancia
+```
+
+Respuesta esperada:
+
+```json
+{
+  "app": "producto",
+  "port": "9092",
+  "host": "nombre-del-host"
 }
 ```
 
@@ -199,7 +217,7 @@ docker compose -f docker-compose-dev.yml up -d
 
 Esto levanta MySQL dev en el puerto `3391` con la base `db_producto`.
 
-Si no usas Docker, también puedes apuntar a un MySQL local siempre que coincida con la configuración de `src/main/resources/application-dev.yml`.
+Si no usas Docker, también puedes apuntar a un MySQL local siempre que coincida con la configuración externa definida en `infra/config-repo/producto-dev.yml`.
 
 ---
 
@@ -237,6 +255,18 @@ Health:
 http://localhost:9091/actuator/health
 ```
 
+Instancia:
+
+```text
+http://localhost:9091/api/v1/producto/instancia
+```
+
+Acceso vía Gateway DEV:
+
+```text
+http://localhost:7091/api/v1/producto/instancia
+```
+
 ---
 
 # 🐳 Ejecución en modo producción (prod)
@@ -248,6 +278,7 @@ PRODUCTO_MYSQL_ROOT_PASSWORD=root
 PRODUCTO_MYSQL_DATABASE=db_producto
 
 SPRING_PROFILES_ACTIVE=prod
+CONFIG_SERVER_URL=http://config-server:7071
 
 PRODUCTO_DB_HOST=mysql-producto
 PRODUCTO_DB_PORT=3306
@@ -266,8 +297,8 @@ docker compose -f docker-compose.yml up -d
 
 Esto levanta:
 
-- MySQL prod en el puerto `3396`
-- La aplicación `producto` en el puerto `9096`
+- MySQL prod en el puerto `3392`
+- La aplicación `producto` en el puerto `9092`
 
 ---
 
@@ -276,13 +307,25 @@ Esto levanta:
 API Productos:
 
 ```text
-http://localhost:9096/api/v1/productos
+http://localhost:9092/api/v1/productos
 ```
 
 Health:
 
 ```text
-http://localhost:9096/actuator/health
+http://localhost:9092/actuator/health
+```
+
+Instancia:
+
+```text
+http://localhost:9092/api/v1/producto/instancia
+```
+
+Acceso vía Gateway PROD:
+
+```text
+http://localhost:7092/api/v1/producto/instancia
 ```
 
 Swagger:
@@ -300,7 +343,9 @@ deshabilitado en prod
 Busca el contenedor de la aplicación con `docker ps -a`:
 
 ```bash
-docker run --name producto22 --network producto-net --env-file .env -p 9099:9096 producto-prod-producto
+docker create --name producto22 --network ms-net --env-file .env -p 9099:9092 producto-prod-producto
+docker network connect producto-int producto22
+docker start producto22
 ```
 
 ## 🔹 Verificar
@@ -313,8 +358,13 @@ docker ps
 
 ## 🔹 Probar
 
-- http://localhost:9096/api/v1/productos
-- http://localhost:9099/api/v1/productos
+- http://localhost:9092/api/v1/productos
+
+Si quieres validar balanceo por Gateway, repite varias veces:
+
+```text
+http://localhost:7092/api/v1/producto/instancia
+```
 
 ---
 
@@ -329,7 +379,7 @@ docker rmi producto-prod-producto
 O limpiar el entorno completo:
 
 ```bash
-docker rm -f producto1 producto2 producto3
+docker rm -f producto22 producto33
 docker compose -f docker-compose.yml down
 ```
 
@@ -340,30 +390,34 @@ docker compose -f docker-compose.yml down
 ### PowerShell
 
 ```powershell
-docker run --name producto33 --network producto-net -p 9098:9096 `
+docker create --name producto33 --network ms-net -p 9098:9092 `
   -e SPRING_PROFILES_ACTIVE=prod `
+  -e CONFIG_SERVER_URL=http://config-server:7071 `
   -e PRODUCTO_DB_HOST=mysql-producto `
   -e PRODUCTO_DB_PORT=3306 `
   -e PRODUCTO_DB_NAME=db_producto `
   -e PRODUCTO_DB_USERNAME=root `
   -e PRODUCTO_DB_PASSWORD=root `
-  producto-service
+  producto-prod-producto
+
+docker network connect producto-int producto33
+docker start producto33
 ```
 
 ---
 
-# 🔗 Integración futura
+# 🔗 Integración actual
 
 ## Config Server dev
 
 ```properties
-SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:7071
+SPRING_CONFIG_IMPORT=optional:configserver:http://localhost:7071
 ```
 
 ## Eureka dev
 
 ```properties
-EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-server:8761/eureka
+EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:7081/eureka
 ```
 
 ## Gateway
@@ -372,16 +426,53 @@ EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://registry-server:8761/eureka
 uri: lb://producto
 ```
 
+Ruta de verificación de instancia por gateway:
+
+```text
+http://localhost:7091/api/v1/producto/instancia
+http://localhost:7092/api/v1/producto/instancia
+```
+
+---
+
+# Estado de avance
+
+- [x] Config Server
+- [x] Registry Server (Eureka)
+- [x] API Gateway
+- [x] Enrutamiento `lb://producto`
+- [ ] Feign
+- [ ] Circuit Breaker
+- [ ] Seguridad
+- [ ] Gestion del trafico (filtros, politicas y control de peticiones)
+- [ ] Observabilidad y trazabilidad
+- [ ] Integracion con frontend
+
+---
+
+# Siguiente paso
+
+Continuar con atributos de calidad sobre la base actual:
+
+- implementar comunicacion entre microservicios con Feign
+- agregar resiliencia con Circuit Breaker
+- integrar seguridad con autenticacion y autorizacion
+- aplicar gestion del trafico en Gateway
+- fortalecer observabilidad y trazabilidad entre servicios
+- habilitar integracion con frontend
+
 ---
 
 # ⚠️ Alcance actual
 
 Este proyecto no incluye aún:
 
-- API Gateway
-- Eureka
-- Config Server
-- Balanceador
+- Feign
+- Circuit Breaker
+- Seguridad
+- Gestion del trafico en Gateway
+- Observabilidad y trazabilidad
+- Integracion con frontend
 
 ---
 
@@ -450,8 +541,8 @@ git push origin --delete tarea/avance
 ## 🔹 5. Crear tag (versión estable)
 
 ```bash
-git tag -a vs01-producto-base -m "versión base"
-git push origin vs01-producto-base
+git tag -a vs04-gateway-lb-r2 -m "Producto integrado con Config Server, Eureka, endpoint de instancia y documentacion actualizada"
+git push origin vs04-gateway-lb-r2
 ```
 
 ---
@@ -459,8 +550,8 @@ git push origin vs01-producto-base
 ## 🔹 6. Eliminar tag (si es necesario)
 
 ```bash
-git tag -d vs01-producto-base
-git push origin --delete vs01-producto-base
+git tag -d vs04-gateway-lb-r2
+git push origin --delete vs04-gateway-lb-r2
 ```
 
 ---
