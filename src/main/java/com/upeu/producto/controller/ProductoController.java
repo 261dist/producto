@@ -53,4 +53,10 @@ public class ProductoController {
         productoService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/detalle/{id}")
+    public ResponseEntity<?> findDetalleById(@PathVariable Integer id) {
+        return ResponseEntity.ok(productoService.findDetalleById(id));
+    }
+
 }

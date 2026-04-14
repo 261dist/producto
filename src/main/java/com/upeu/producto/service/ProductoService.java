@@ -16,4 +16,6 @@ public interface ProductoService {
     ProductoResponse update(Integer id, ProductoRequest request);
 
     void delete(Integer id);
+
+    ProductoResponse findDetalleById(Integer id);
 }
