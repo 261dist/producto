@@ -18,6 +18,7 @@ Actualmente incluye:
 - Integración operativa con Registry Server (Eureka)
 - Integración operativa con API Gateway
 - Enrutamiento dinámico con `lb://producto`
+- Comunicación con `catalogo` mediante OpenFeign
 
 ---
 
@@ -140,6 +141,7 @@ Operaciones disponibles:
 - `POST /api/v1/productos`
 - `GET /api/v1/productos`
 - `GET /api/v1/productos/{id}`
+- `GET /api/v1/productos/detalle/{id}`
 - `PUT /api/v1/productos/{id}`
 - `DELETE /api/v1/productos/{id}`
 
@@ -168,6 +170,26 @@ Respuesta esperada:
   "app": "producto",
   "port": "9092",
   "host": "nombre-del-host"
+}
+```
+
+Endpoint de detalle con integración Feign:
+
+- `GET /api/v1/productos/detalle/{id}`
+
+Ejemplo de respuesta:
+
+```json
+{
+  "id": 1,
+  "nombre": "Laptop Lenovo",
+  "descripcion": "Equipo para laboratorio",
+  "idCategoria": 1,
+  "categoria": {
+    "id": 1,
+    "nombre": "Tecnologia",
+    "descripcion": "Productos tecnologicos"
+  }
 }
 ```
 
@@ -433,6 +455,24 @@ http://localhost:7091/api/v1/producto/instancia
 http://localhost:7092/api/v1/producto/instancia
 ```
 
+## Feign
+
+La comunicación entre microservicios ya está operativa desde `producto` hacia `catalogo`:
+
+- `producto` habilita clientes Feign con `@EnableFeignClients`
+- `CatalogoClient` consume `GET /api/v1/categorias/{id}`
+- `findDetalleById` arma una respuesta enriquecida con los datos de categoría
+- el cliente Feign resuelve el servicio por nombre usando Eureka: `@FeignClient(name = "catalogo")`
+
+Rutas funcionales para probar la integración:
+
+```text
+http://localhost:9091/api/v1/productos/detalle/{id}
+http://localhost:9092/api/v1/productos/detalle/{id}
+http://localhost:7091/api/v1/productos/detalle/{id}
+http://localhost:7092/api/v1/productos/detalle/{id}
+```
+
 ---
 
 # Estado de avance
@@ -441,7 +481,7 @@ http://localhost:7092/api/v1/producto/instancia
 - [x] Registry Server (Eureka)
 - [x] API Gateway
 - [x] Enrutamiento `lb://producto`
-- [ ] Feign
+- [x] Feign
 - [ ] Circuit Breaker
 - [ ] Seguridad
 - [ ] Gestion del trafico (filtros, politicas y control de peticiones)
@@ -454,7 +494,6 @@ http://localhost:7092/api/v1/producto/instancia
 
 Continuar con atributos de calidad sobre la base actual:
 
-- implementar comunicacion entre microservicios con Feign
 - agregar resiliencia con Circuit Breaker
 - integrar seguridad con autenticacion y autorizacion
 - aplicar gestion del trafico en Gateway
@@ -467,7 +506,6 @@ Continuar con atributos de calidad sobre la base actual:
 
 Este proyecto no incluye aún:
 
-- Feign
 - Circuit Breaker
 - Seguridad
 - Gestion del trafico en Gateway
@@ -541,8 +579,8 @@ git push origin --delete tarea/avance
 ## 🔹 5. Crear tag (versión estable)
 
 ```bash
-git tag -a vs04-gateway-lb-r2 -m "Producto integrado con Config Server, Eureka, endpoint de instancia y documentacion actualizada"
-git push origin vs04-gateway-lb-r2
+git tag -a vs05-feign-r1 -m "Producto integrado con Feign para consultar categorias desde catalogo y documentacion actualizada"
+git push origin vs05-feign-r1
 ```
 
 ---
@@ -550,8 +588,8 @@ git push origin vs04-gateway-lb-r2
 ## 🔹 6. Eliminar tag (si es necesario)
 
 ```bash
-git tag -d vs04-gateway-lb-r2
-git push origin --delete vs04-gateway-lb-r2
+git tag -d vs05-feign-r1
+git push origin --delete vs05-feign-r1
 ```
 
 ---

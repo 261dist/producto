@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.upeu.producto.client.CatalogoClient;
+import com.upeu.producto.dto.CategoriaDto;
 
 import java.util.List;
 
@@ -21,11 +23,13 @@ public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
     private final ProductoMapper productoMapper;
+    private final CatalogoClient catalogoClient;
 
     @Override
     @Transactional
     public ProductoResponse create(ProductoRequest request) {
-        log.info("Iniciando creacion de producto con nombre: {} y idCategoria: {}", request.getNombre(), request.getIdCategoria());
+        log.info("Iniciando creacion de producto con nombre: {} y idCategoria: {}", request.getNombre(),
+                request.getIdCategoria());
         Producto producto = productoMapper.toEntity(request);
         Producto savedProducto = productoRepository.save(producto);
         log.info("Producto creado exitosamente con ID: {}", savedProducto.getId());
@@ -80,4 +84,51 @@ public class ProductoServiceImpl implements ProductoService {
                     return new ResourceNotFoundException("Producto con id " + id + " no encontrado");
                 });
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductoResponse findDetalleById(Integer id) {
+        log.info("Buscando detalle de producto con ID: {}", id);
+
+        Producto producto = getProductoById(id);
+
+        CategoriaDto categoria = null;
+
+        try {
+            categoria = catalogoClient.findCategoriaById(
+                    producto.getIdCategoria().longValue());
+        } catch (Exception e) {
+            log.warn("No se pudo obtener la categoría desde catalogo. idCategoria={}", producto.getIdCategoria(), e);
+        }
+
+        return ProductoResponse.builder()
+                .id(producto.getId())
+                .nombre(producto.getNombre())
+                .descripcion(producto.getDescripcion())
+                .idCategoria(producto.getIdCategoria())
+                .categoria(categoria)
+                .build();
+    }
+    /*
+     * @Override
+     * 
+     * @Transactional(readOnly = true)
+     * public ProductoResponse findDetalleById(Integer id) {
+     * log.info("Buscando detalle de producto con ID: {}", id);
+     * 
+     * Producto producto = getProductoById(id);
+     * 
+     * CategoriaDto categoria = catalogoClient.findCategoriaById(
+     * producto.getIdCategoria().longValue());
+     * 
+     * return ProductoResponse.builder()
+     * .id(producto.getId())
+     * .nombre(producto.getNombre())
+     * .descripcion(producto.getDescripcion())
+     * .idCategoria(producto.getIdCategoria())
+     * .categoria(categoria)
+     * .build();
+     * 
+     * }
+     */
 }
